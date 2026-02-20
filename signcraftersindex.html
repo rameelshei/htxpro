@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SignCraft Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --bg: #0C0C0E;
+  --surface: #16161A;
+  --surface-2: #1E1E24;
+  --surface-3: #26262E;
+  --border: #2A2A34;
+  --text: #E8E6E3;
+  --text-dim: #8A8A96;
+  --accent: #E87A2E;
+  --accent-hover: #F08C3E;
+  --accent-dim: rgba(232,122,46,0.15);
+  --success: #34D399;
+  --danger: #EF4444;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* MODAL */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+  backdrop-filter: blur(4px);
+}
+.modal-backdrop.hidden { display: none; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 32px;
+  width: 460px;
+  max-width: 90vw;
+}
+.modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.modal .modal-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.6; }
+.modal .modal-sub a { color: var(--accent); text-decoration: none; }
+.key-input-wrap { display: flex; gap: 10px; }
+.key-input-wrap input {
+  flex: 1; padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: 13px; outline: none;
+}
+.key-input-wrap input:focus { border-color: var(--accent); }
+.key-error { color: var(--danger); font-size: 12px; margin-top: 8px; display: none; }
+
+/* HEADER */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.header .logo { display: flex; align-items: center; gap: 10px; }
+.header .logo-icon {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px; color: #000;
+  font-family: 'Space Mono', monospace;
+}
+.header .logo-text { font-weight: 700; font-size: 18px; letter-spacing: -0.3px; }
+.header .logo-text span { color: var(--accent); }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.header .version {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px; color: var(--text-dim);
+  background: var(--surface-2);
+  padding: 4px 10px; border-radius: 20px;
+  border: 1px solid var(--border);
+}
+.api-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text-dim);
+  cursor: pointer; padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  transition: all 0.15s;
+}
+.api-status:hover { border-color: var(--accent); }
+.api-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--danger); }
+.api-dot.connected { background: var(--success); }
+
+/* STEPS */
+.steps-bar {
+  display: flex; align-items: center;
+  padding: 16px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.step-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); font-weight: 500; }
+.step-item.active { color: var(--accent); }
+.step-item.done { color: var(--success); }
+.step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  border: 2px solid var(--border); color: var(--text-dim);
+  font-family: 'Space Mono', monospace;
+}
+.step-item.active .step-num { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.step-item.done .step-num { border-color: var(--success); color: #000; background: var(--success); }
+.step-connector { width: 32px; height: 2px; background: var(--border); margin: 0 12px; }
+
+/* SCREENS */
+.screen { display: none; flex: 1; padding: 24px; max-width: 1400px; margin: 0 auto; width: 100%; }
+.screen.active { display: flex; flex-direction: column; }
+.app { display: flex; flex-direction: column; min-height: calc(100vh - 65px); }
+
+/* UPLOAD */
+.upload-zone {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer; transition: all 0.2s;
+  min-height: 400px;
+}
+.upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: var(--accent-dim); }
+.upload-icon {
+  width: 64px; height: 64px; border-radius: 16px;
+  background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px; font-size: 28px;
+}
+.upload-zone h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+.upload-zone p { font-size: 14px; color: var(--text-dim); }
+.upload-zone input { display: none; }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: var(--radius-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  border: none; cursor: pointer; transition: all 0.15s;
+}
+.btn-primary { background: var(--accent); color: #000; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--surface-3); }
+.btn-ghost { background: transparent; color: var(--text-dim); }
+.btn-ghost:hover { color: var(--text); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* DRAW SCREEN */
+.draw-layout { display: flex; gap: 24px; flex: 1; }
+.draw-canvas-wrap {
+  flex: 1; position: relative;
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border);
+}
+.draw-canvas-wrap canvas { max-width: 100%; max-height: 70vh; cursor: crosshair; }
+.draw-sidebar { width: 320px; display: flex; flex-direction: column; gap: 16px; }
+.sidebar-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.sidebar-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.sidebar-card p { font-size: 12px; color: var(--text-dim); margin-bottom: 16px; line-height: 1.5; }
+.form-group { margin-bottom: 14px; }
+.form-group:last-child { margin-bottom: 0; }
+.form-label {
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--text-dim); margin-bottom: 6px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.form-input {
+  width: 100%; padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; outline: none;
+  transition: border-color 0.15s;
+}
+.form-input:focus { border-color: var(--accent); }
+.form-input::placeholder { color: var(--text-dim); opacity: 0.6; }
+
+.hint-box {
+  display: flex; gap: 10px; padding: 12px;
+  background: var(--accent-dim);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(232,122,46,0.25);
+  font-size: 12px; color: var(--accent); line-height: 1.5;
+}
+.hint-box .hint-icon { font-size: 16px; flex-shrink: 0; }
+
+.box-status {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500;
+}
+.box-status.empty { background: var(--surface-2); color: var(--text-dim); }
+.box-status.drawn { background: rgba(52,211,153,0.1); color: var(--success); border: 1px solid rgba(52,211,153,0.2); }
+
+/* COLOR PICKER */
+.color-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.color-swatch {
+  width: 32px; height: 32px; border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer; transition: all 0.15s;
+}
+.color-swatch:hover { transform: scale(1.1); }
+.color-swatch.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+
+/* RESULTS */
+.results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.results-header h2 { font-size: 20px; font-weight: 700; }
+.results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; flex: 1; }
+.mockup-card {
+  position: relative; background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden; cursor: pointer;
+  transition: all 0.2s;
+}
+.mockup-card:hover { border-color: var(--text-dim); }
+.mockup-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.mockup-card img { width: 100%; display: block; background: var(--surface-2); }
+.mockup-label {
+  padding: 12px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--border);
+}
+.mockup-label .type-name { font-size: 13px; font-weight: 600; }
+.mockup-label .type-desc { font-size: 11px; color: var(--text-dim); }
+.sign-type-tag {
+  display: inline-flex; padding: 4px 9px;
+  background: var(--surface-3); border-radius: 20px;
+  font-size: 10px; font-weight: 600;
+  color: var(--text-dim); letter-spacing: 0.3px;
+}
+
+/* CARD STATES */
+.mockup-card .card-loading {
+  aspect-ratio: 4/3;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: var(--surface-2); gap: 12px;
+}
+.card-spinner {
+  width: 28px; height: 28px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.card-loading span { font-size: 12px; color: var(--text-dim); }
+.mockup-card .card-error {
+  aspect-ratio: 4/3;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(239,68,68,0.05); gap: 8px;
+  padding: 20px; text-align: center;
+}
+.card-error .err-icon { font-size: 24px; }
+.card-error .err-msg { font-size: 12px; color: var(--danger); line-height: 1.4; }
+
+/* EXPORT */
+.export-layout { display: flex; gap: 24px; flex: 1; }
+.export-preview {
+  flex: 1; background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.export-preview img { max-width: 100%; max-height: 70vh; display: block; }
+.export-sidebar { width: 320px; display: flex; flex-direction: column; gap: 16px; }
+.export-actions { display: flex; flex-direction: column; gap: 10px; }
+
+.cost-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px; color: var(--text-dim);
+  background: var(--surface-2);
+  padding: 4px 10px; border-radius: 20px;
+  border: 1px solid var(--border);
+}
+
+/* EDIT BAR */
+.edit-bar {
+  display: none;
+  margin-top: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.edit-bar.active { display: block; }
+.edit-bar-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.edit-bar-header h3 { font-size: 15px; font-weight: 600; }
+.edit-bar-selected {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--accent);
+}
+.edit-bar-selected .edit-thumb {
+  width: 40px; height: 30px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid var(--accent);
+}
+.edit-input-row {
+  display: flex; gap: 10px;
+}
+.edit-input-row input {
+  flex: 1; padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; outline: none;
+}
+.edit-input-row input:focus { border-color: var(--accent); }
+.edit-input-row input::placeholder { color: var(--text-dim); opacity: 0.6; }
+.edit-suggestions {
+  display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+}
+.edit-chip {
+  padding: 6px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px; color: var(--text-dim);
+  cursor: pointer; transition: all 0.15s;
+  white-space: nowrap;
+}
+.edit-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .draw-layout, .export-layout { flex-direction: column; }
+  .draw-sidebar, .export-sidebar { width: 100%; }
+  .results-grid { grid-template-columns: repeat(2, 1fr); }
+  .edit-input-row { flex-direction: column; }
+}
+@media (max-width: 480px) {
+  .results-grid { grid-template-columns: 1fr; }
+  .step-item .step-label { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- API KEY MODAL -->
+<div class="modal-backdrop" id="apiModal">
+  <div class="modal">
+    <h2>Connect OpenAI API</h2>
+    <p class="modal-sub">
+      SignCraft uses OpenAI's image generation to create realistic sign mockups.
+      You need a key with <strong>gpt-image-1.5</strong> access.<br>
+      <a href="https://platform.openai.com/api-keys" target="_blank">Get an API key →</a>
+    </p>
+    <div class="key-input-wrap">
+      <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
+      <button class="btn btn-primary" onclick="saveApiKey()">Connect</button>
+    </div>
+    <div class="key-error" id="keyError">Invalid API key format. Should start with sk-</div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">SC</div>
+    <div class="logo-text">Sign<span>Craft</span> Pro</div>
+  </div>
+  <div class="header-right">
+    <div class="api-status" id="apiStatus" onclick="showApiModal()">
+      <div class="api-dot" id="apiDot"></div>
+      <span id="apiLabel">No API Key</span>
+    </div>
+    <div class="version">v1.0</div>
+  </div>
+</div>
+
+<!-- STEPS -->
+<div class="steps-bar">
+  <div class="step-item active" id="step1"><div class="step-num">1</div><span class="step-label">Upload</span></div>
+  <div class="step-connector"></div>
+  <div class="step-item" id="step2"><div class="step-num">2</div><span class="step-label">Place & Details</span></div>
+  <div class="step-connector"></div>
+  <div class="step-item" id="step3"><div class="step-num">3</div><span class="step-label">Mockups</span></div>
+  <div class="step-connector"></div>
+  <div class="step-item" id="step4"><div class="step-num">4</div><span class="step-label">Export</span></div>
+</div>
+
+<!-- SCREEN 1: UPLOAD -->
+<div class="screen active" id="screen-upload">
+  <div class="upload-zone" id="uploadZone">
+    <div class="upload-icon">📸</div>
+    <h2>Upload a storefront photo</h2>
+    <p>Drag & drop or click to browse. JPG, PNG up to 20MB.</p>
+    <input type="file" id="fileInput" accept="image/*" capture="environment">
+    <div style="display:flex; gap:12px; margin-top:24px;">
+      <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Browse Files</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 2: DRAW + DETAILS -->
+<div class="screen" id="screen-draw">
+  <div class="draw-layout">
+    <div class="draw-canvas-wrap">
+      <canvas id="drawCanvas"></canvas>
+    </div>
+    <div class="draw-sidebar">
+      <div class="sidebar-card">
+        <h3>Sign Placement</h3>
+        <p>Click and drag on the photo to draw a box where the sign should go.</p>
+        <div class="box-status empty" id="boxStatus"><span>⬜</span> No box drawn yet</div>
+        <div style="margin-top:10px;">
+          <button class="btn btn-ghost" style="font-size:12px; padding:6px 12px;" onclick="clearBox()">↺ Clear & redraw</button>
+        </div>
+      </div>
+      <div class="sidebar-card">
+        <h3>Business Details</h3>
+        <p>What should the sign say?</p>
+        <div class="form-group">
+          <label class="form-label">Business Name</label>
+          <input class="form-input" id="bizName" type="text" placeholder="e.g. Johnson Orthopedics" maxlength="40">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tagline (optional)</label>
+          <input class="form-input" id="bizTagline" type="text" placeholder="e.g. Spine & Sports Medicine" maxlength="60">
+        </div>
+      </div>
+      <div class="sidebar-card">
+        <h3>Sign Type</h3>
+        <p>What kind of sign are you mocking up?</p>
+        <div class="form-group">
+          <select class="form-input" id="signTypeSelect" style="cursor:pointer; appearance:none;">
+            <option value="channel">Channel Letters (Face-lit LED)</option>
+            <option value="cabinet">Cabinet Sign (Illuminated Box)</option>
+            <option value="lightbox">Slim Lightbox (Backlit Panel)</option>
+            <option value="vinyl">Vinyl Lettering (Cut Vinyl)</option>
+            <option value="dimensional">Dimensional Letters (Raised Metal)</option>
+            <option value="raceway">Raceway Channel Letters (On Backer Bar)</option>
+          </select>
+        </div>
+      </div>
+      <div class="sidebar-card">
+        <h3>Sign Color</h3>
+        <p>Primary color theme for the signage.</p>
+        <div class="color-row" id="colorRow">
+          <div class="color-swatch selected" data-color="white" style="background:#FFFFFF;" onclick="pickColor(this)"></div>
+          <div class="color-swatch" data-color="black" style="background:#1a1a1a; border:1px solid var(--border);" onclick="pickColor(this)"></div>
+          <div class="color-swatch" data-color="navy blue" style="background:#0a2463;" onclick="pickColor(this)"></div>
+          <div class="color-swatch" data-color="red" style="background:#C41E3A;" onclick="pickColor(this)"></div>
+          <div class="color-swatch" data-color="forest green" style="background:#1B5E20;" onclick="pickColor(this)"></div>
+          <div class="color-swatch" data-color="gold" style="background:#D4A017;" onclick="pickColor(this)"></div>
+          <div class="color-swatch" data-color="brushed stainless steel" style="background:linear-gradient(135deg,#888,#ccc,#999);" onclick="pickColor(this)"></div>
+        </div>
+      </div>
+      <div class="hint-box">
+        <span class="hint-icon">💡</span>
+        <span>Generates 3 style variants of your selected sign type: clean & modern, bold & classic, and elegant & premium.</span>
+      </div>
+      <button class="btn btn-primary" id="generateBtn" disabled onclick="generateMockups()" style="width:100%; justify-content:center; padding:14px 20px;">
+        Generate 3 Mockups →
+      </button>
+      <div style="text-align:center;">
+        <span class="cost-badge">~$0.25 per batch • 15–30 sec</span>
+      </div>
+      <button class="btn btn-ghost" onclick="startOver()" style="width:100%; justify-content:center;">← Change Photo</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 3: RESULTS -->
+<div class="screen" id="screen-results">
+  <div class="results-header">
+    <div>
+      <h2>Your Mockups</h2>
+      <p style="font-size:13px; color:var(--text-dim); margin-top:4px;">
+        Click to select, then export. <span id="resultsBizName" style="color:var(--accent);"></span>
+      </p>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <button class="btn btn-secondary" onclick="goToScreen('draw')">← Edit & Regenerate</button>
+      <button class="btn btn-primary" id="exportSelectedBtn" disabled onclick="exportSelected()">Export Selected →</button>
+    </div>
+  </div>
+  <div class="results-grid" id="resultsGrid"></div>
+
+  <!-- EDIT BAR -->
+  <div class="edit-bar" id="editBar">
+    <div class="edit-bar-header">
+      <h3>Edit Selected Mockup</h3>
+      <div class="edit-bar-selected" id="editBarSelected">
+        <img class="edit-thumb" id="editThumb" src="" alt="">
+        <span id="editTypeBadge">Channel Letters</span>
+      </div>
+    </div>
+    <div class="edit-input-row">
+      <input type="text" id="editPrompt" placeholder='e.g. "Make the sign bigger" or "Change to red letters on black background"' maxlength="200">
+      <button class="btn btn-primary" id="editSubmitBtn" onclick="submitEdit()">Regenerate →</button>
+    </div>
+    <div class="edit-suggestions">
+      <div class="edit-chip" onclick="useChip(this)">Make the sign larger</div>
+      <div class="edit-chip" onclick="useChip(this)">Center the text better</div>
+      <div class="edit-chip" onclick="useChip(this)">Change to red letters</div>
+      <div class="edit-chip" onclick="useChip(this)">Make background matte black</div>
+      <div class="edit-chip" onclick="useChip(this)">Add a warm white LED glow</div>
+      <div class="edit-chip" onclick="useChip(this)">Make it look like a night photo</div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 4: EXPORT -->
+<div class="screen" id="screen-export">
+  <div class="export-layout">
+    <div class="export-preview">
+      <img id="exportImg" src="" alt="Mockup">
+    </div>
+    <div class="export-sidebar">
+      <div class="sidebar-card">
+        <h3 id="exportTypeName">Channel Letters</h3>
+        <p id="exportTypeDesc" style="margin-bottom:8px;">Individually cut illuminated letters.</p>
+        <span class="sign-type-tag" id="exportTag">CHANNEL LETTERS</span>
+      </div>
+      <div class="sidebar-card">
+        <h3>Export</h3>
+        <div class="export-actions">
+          <button class="btn btn-primary" onclick="downloadPNG()" style="width:100%; justify-content:center;">⬇ Download PNG</button>
+          <button class="btn btn-secondary" onclick="copyToClipboard()" style="width:100%; justify-content:center;">📋 Copy to Clipboard</button>
+        </div>
+      </div>
+      <button class="btn btn-secondary" onclick="goToScreen('results')" style="width:100%; justify-content:center;">← Back to All Mockups</button>
+      <button class="btn btn-ghost" onclick="startOver()" style="width:100%; justify-content:center;">Start Over</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== CONFIG =====
+const MAX_IMG_DIM = 1536;
+const MASK_EXPAND = 20;
+
+const SIGN_TYPE_MAP = {
+  channel: {
+    name: 'Channel Letters',
+    desc: 'Face-lit individually cut illuminated letters',
+    tag: 'CHANNEL LETTERS',
+    base: (name, tagline, color) =>
+      `Photorealistic commercial signage: install face-lit LED channel letters on this building facade in the transparent/edited area. The letters read "${name}"${tagline ? ` with "${tagline}" in smaller text below` : ''}. Individual aluminum channel letters with ${color} LED-illuminated faces and brushed aluminum returns showing depth. Letters cast a subtle warm glow on the wall behind them. Professional commercial sign installation with proper mounting, realistic shadows matching the sunlight in the photo, and perspective that matches the building angle exactly. The sign should look like a real professional photograph of installed signage, not a rendering.`
+  },
+  cabinet: {
+    name: 'Cabinet Sign',
+    desc: 'Illuminated box sign with translucent face',
+    tag: 'CABINET SIGN',
+    base: (name, tagline, color) =>
+      `Photorealistic commercial signage: install an illuminated cabinet sign (box sign) on this building facade in the transparent/edited area. The sign displays "${name}"${tagline ? ` with "${tagline}" below` : ''} in ${color} text on a dark background. Rectangular aluminum sign cabinet with translucent acrylic face panel, internally LED illuminated, with visible aluminum trim cap on all edges. The cabinet has real depth and dimension. Professional commercial sign installation with realistic shadows matching the photo's lighting, and perspective matching the building angle exactly. Should look like a real photograph, not a rendering.`
+  },
+  lightbox: {
+    name: 'Slim Lightbox',
+    desc: 'Modern thin backlit panel sign',
+    tag: 'SLIM LIGHTBOX',
+    base: (name, tagline, color) =>
+      `Photorealistic commercial signage: install a modern slim LED lightbox panel sign on this building facade in the transparent/edited area. The sign displays "${name}"${tagline ? ` with "${tagline}" below` : ''} with ${color} graphics. Ultra-thin profile backlit panel with clean edges, snap-frame aluminum border, and even LED illumination behind a printed translucent face. Contemporary commercial signage style. Professional installation with realistic shadows matching the photo's lighting, and perspective matching the building angle exactly. Should look like a real photograph.`
+  },
+  vinyl: {
+    name: 'Vinyl Lettering',
+    desc: 'Cut vinyl letters applied to surface',
+    tag: 'VINYL LETTERING',
+    base: (name, tagline, color) =>
+      `Photorealistic commercial signage: apply professional cut vinyl lettering directly onto the building surface in the transparent/edited area. The text reads "${name}"${tagline ? ` with "${tagline}" in smaller text below` : ''}. ${color.charAt(0).toUpperCase() + color.slice(1)} vinyl letters applied flat to the facade surface — no cabinet, no illumination, no backing panel. Clean crisp commercial vinyl application where you can tell the letters are adhered to the wall. Perspective matches the building surface angle exactly, with realistic shadows matching the photo's lighting. Should look like a real photograph of installed vinyl signage.`
+  },
+  dimensional: {
+    name: 'Dimensional Letters',
+    desc: 'Non-illuminated raised metal letters',
+    tag: 'DIMENSIONAL LETTERS',
+    base: (name, tagline, color) =>
+      `Photorealistic commercial signage: install dimensional letters on this building facade in the transparent/edited area. The letters read "${name}"${tagline ? ` with "${tagline}" below` : ''}. Non-illuminated raised ${color === 'brushed stainless steel' ? 'brushed stainless steel' : color === 'gold' ? 'brushed brass' : color + ' painted aluminum'} letters mounted with standoff pins, creating visible shadow depth on the wall behind each letter. Each letter has real 3D thickness visible from this angle. Professional commercial dimensional lettering with realistic shadows matching the photo's sunlight direction. Should look like a real photograph, not a rendering.`
+  },
+  raceway: {
+    name: 'Raceway Channel Letters',
+    desc: 'Illuminated letters on a backer bar',
+    tag: 'RACEWAY MOUNT',
+    base: (name, tagline, color) =>
+      `Photorealistic commercial signage: install raceway-mounted channel letters on this building facade in the transparent/edited area. The letters read "${name}"${tagline ? ` with "${tagline}" on or below the raceway` : ''}. LED-illuminated ${color} face-lit channel letters mounted on top of a visible rectangular aluminum raceway/wireway bar. The raceway bar is a horizontal rectangular aluminum tube that runs behind and below the letters, painted to coordinate. Professional commercial signage installation with realistic shadows matching the photo's lighting, and perspective matching the building angle exactly. Should look like a real photograph.`
+  }
+};
+
+const STYLE_VARIANTS = [
+  {
+    id: 'modern',
+    name: 'Clean & Modern',
+    desc: 'Minimal, contemporary design',
+    tag: 'MODERN',
+    modifier: 'Style: clean, modern, minimalist. Use a contemporary sans-serif typeface with generous letter-spacing. Keep the design simple and sleek with clean lines. The look should feel fresh, professional, and current — like a newly opened upscale business.'
+  },
+  {
+    id: 'classic',
+    name: 'Bold & Classic',
+    desc: 'Traditional, high-impact commercial look',
+    tag: 'CLASSIC',
+    modifier: 'Style: bold, classic, traditional commercial signage. Use a strong, heavy-weight typeface with high visual impact. The sign should feel established, trustworthy, and commercially prominent — like a successful long-running business with strong street presence.'
+  },
+  {
+    id: 'premium',
+    name: 'Elegant & Premium',
+    desc: 'Upscale, refined design',
+    tag: 'PREMIUM',
+    modifier: 'Style: elegant, premium, refined. Use a sophisticated typeface — could be a refined serif or an elegant script for the business name. The sign should convey luxury, quality, and exclusivity — like a high-end boutique or professional practice.'
+  }
+];
+
+// ===== STATE =====
+let apiKey = '';
+let uploadedImage = null;
+let imageNatW = 0, imageNatH = 0;
+let canvasDisplayW = 0, canvasDisplayH = 0;
+let signBox = null;
+let drawing = false;
+let drawStart = null;
+let selectedMockup = null;
+let selectedColor = 'white';
+let selectedSignType = 'channel';
+let mockupResults = [];
+let isGenerating = false;
+
+// ===== API KEY =====
+function initApiKey() {
+  const stored = localStorage.getItem('signcraft_api_key');
+  if (stored) {
+    apiKey = stored;
+    updateApiStatus(true);
+    document.getElementById('apiModal').classList.add('hidden');
+  }
+}
+
+function saveApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val.startsWith('sk-')) {
+    document.getElementById('keyError').style.display = 'block';
+    return;
+  }
+  document.getElementById('keyError').style.display = 'none';
+  apiKey = val;
+  localStorage.setItem('signcraft_api_key', val);
+  updateApiStatus(true);
+  document.getElementById('apiModal').classList.add('hidden');
+  updateGenerateBtn();
+}
+
+function showApiModal() {
+  document.getElementById('apiKeyInput').value = apiKey || '';
+  document.getElementById('keyError').style.display = 'none';
+  document.getElementById('apiModal').classList.remove('hidden');
+}
+
+function updateApiStatus(connected) {
+  document.getElementById('apiDot').className = connected ? 'api-dot connected' : 'api-dot';
+  document.getElementById('apiLabel').textContent = connected ? 'API Connected' : 'No API Key';
+}
+
+// ===== NAVIGATION =====
+function goToScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  const steps = ['upload', 'draw', 'results', 'export'];
+  const idx = steps.indexOf(name);
+  steps.forEach((s, i) => {
+    const el = document.getElementById('step' + (i + 1));
+    el.classList.remove('active', 'done');
+    if (i < idx) el.classList.add('done');
+    if (i === idx) el.classList.add('active');
+  });
+}
+
+function startOver() {
+  uploadedImage = null;
+  signBox = null;
+  selectedMockup = null;
+  mockupResults = [];
+  isGenerating = false;
+  document.getElementById('fileInput').value = '';
+  goToScreen('upload');
+}
+
+// ===== UPLOAD =====
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+
+uploadZone.addEventListener('click', (e) => { if (e.target.tagName !== 'BUTTON') fileInput.click(); });
+uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', (e) => {
+  e.preventDefault(); uploadZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+function handleFile(file) {
+  if (!file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      uploadedImage = img;
+      imageNatW = img.naturalWidth;
+      imageNatH = img.naturalHeight;
+      signBox = null;
+      selectedMockup = null;
+      goToScreen('draw');
+      requestAnimationFrame(() => setupDrawCanvas());
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ===== COLOR =====
+function pickColor(el) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedColor = el.dataset.color;
+}
+
+// ===== DRAW CANVAS =====
+const drawCanvas = document.getElementById('drawCanvas');
+const drawCtx = drawCanvas.getContext('2d');
+
+function setupDrawCanvas() {
+  const wrap = drawCanvas.parentElement;
+  const maxW = wrap.clientWidth - 4;
+  const maxH = window.innerHeight * 0.7;
+  const scale = Math.min(maxW / imageNatW, maxH / imageNatH, 1);
+  canvasDisplayW = Math.round(imageNatW * scale);
+  canvasDisplayH = Math.round(imageNatH * scale);
+  drawCanvas.width = canvasDisplayW;
+  drawCanvas.height = canvasDisplayH;
+  redrawCanvas();
+  updateBoxStatus();
+  updateGenerateBtn();
+}
+
+function redrawCanvas() {
+  drawCtx.clearRect(0, 0, canvasDisplayW, canvasDisplayH);
+  drawCtx.drawImage(uploadedImage, 0, 0, canvasDisplayW, canvasDisplayH);
+  if (signBox) {
+    const sx = canvasDisplayW / imageNatW, sy = canvasDisplayH / imageNatH;
+    const bx = signBox.x * sx, by = signBox.y * sy;
+    const bw = signBox.w * sx, bh = signBox.h * sy;
+
+    drawCtx.fillStyle = 'rgba(0,0,0,0.4)';
+    drawCtx.fillRect(0, 0, canvasDisplayW, by);
+    drawCtx.fillRect(0, by + bh, canvasDisplayW, canvasDisplayH - by - bh);
+    drawCtx.fillRect(0, by, bx, bh);
+    drawCtx.fillRect(bx + bw, by, canvasDisplayW - bx - bw, bh);
+
+    drawCtx.strokeStyle = '#E87A2E';
+    drawCtx.lineWidth = 2;
+    drawCtx.setLineDash([6, 4]);
+    drawCtx.strokeRect(bx, by, bw, bh);
+    drawCtx.setLineDash([]);
+
+    drawCtx.fillStyle = '#E87A2E';
+    [[bx, by], [bx + bw, by], [bx, by + bh], [bx + bw, by + bh]].forEach(([cx, cy]) => {
+      drawCtx.beginPath();
+      drawCtx.arc(cx, cy, 4, 0, Math.PI * 2);
+      drawCtx.fill();
+    });
+
+    drawCtx.font = '600 11px "DM Sans", sans-serif';
+    drawCtx.fillStyle = '#E87A2E';
+    drawCtx.fillText('SIGN ZONE', bx + 6, by - 8);
+  }
+}
+
+drawCanvas.addEventListener('mousedown', startDrawEv);
+drawCanvas.addEventListener('mousemove', moveDrawEv);
+drawCanvas.addEventListener('mouseup', endDrawEv);
+drawCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawEv(touchToMouse(e)); }, { passive: false });
+drawCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); moveDrawEv(touchToMouse(e)); }, { passive: false });
+drawCanvas.addEventListener('touchend', (e) => { e.preventDefault(); endDrawEv(); }, { passive: false });
+
+function touchToMouse(e) {
+  const t = e.touches[0], rect = drawCanvas.getBoundingClientRect();
+  return { offsetX: t.clientX - rect.left, offsetY: t.clientY - rect.top };
+}
+function startDrawEv(e) { drawing = true; drawStart = { x: e.offsetX, y: e.offsetY }; }
+function moveDrawEv(e) {
+  if (!drawing) return;
+  const sx = imageNatW / canvasDisplayW, sy = imageNatH / canvasDisplayH;
+  const x1 = Math.min(drawStart.x, e.offsetX), y1 = Math.min(drawStart.y, e.offsetY);
+  const x2 = Math.max(drawStart.x, e.offsetX), y2 = Math.max(drawStart.y, e.offsetY);
+  signBox = { x: x1 * sx, y: y1 * sy, w: (x2 - x1) * sx, h: (y2 - y1) * sy };
+  redrawCanvas();
+}
+function endDrawEv() {
+  drawing = false;
+  if (signBox && (signBox.w < 20 || signBox.h < 10)) signBox = null;
+  redrawCanvas(); updateBoxStatus(); updateGenerateBtn();
+}
+function clearBox() { signBox = null; redrawCanvas(); updateBoxStatus(); updateGenerateBtn(); }
+function updateBoxStatus() {
+  const el = document.getElementById('boxStatus');
+  if (signBox) {
+    el.className = 'box-status drawn';
+    el.innerHTML = '<span>✅</span> Sign zone placed';
+  } else {
+    el.className = 'box-status empty';
+    el.innerHTML = '<span>⬜</span> No box drawn yet';
+  }
+}
+function updateGenerateBtn() {
+  const name = document.getElementById('bizName').value.trim();
+  document.getElementById('generateBtn').disabled = !(signBox && name.length > 0 && apiKey);
+}
+document.getElementById('bizName').addEventListener('input', updateGenerateBtn);
+
+// ===== IMAGE + MASK PREP =====
+function prepareImageAndMask() {
+  const scale = Math.min(MAX_IMG_DIM / imageNatW, MAX_IMG_DIM / imageNatH, 1);
+  const w = Math.round(imageNatW * scale);
+  const h = Math.round(imageNatH * scale);
+
+  const imgCanvas = document.createElement('canvas');
+  imgCanvas.width = w; imgCanvas.height = h;
+  imgCanvas.getContext('2d').drawImage(uploadedImage, 0, 0, w, h);
+
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = w; maskCanvas.height = h;
+  const maskCtx = maskCanvas.getContext('2d');
+  maskCtx.fillStyle = 'rgba(0,0,0,1)';
+  maskCtx.fillRect(0, 0, w, h);
+
+  const bx = Math.max(0, signBox.x * scale - MASK_EXPAND);
+  const by = Math.max(0, signBox.y * scale - MASK_EXPAND);
+  const bw = Math.min(w - bx, signBox.w * scale + MASK_EXPAND * 2);
+  const bh = Math.min(h - by, signBox.h * scale + MASK_EXPAND * 2);
+  maskCtx.clearRect(bx, by, bw, bh);
+
+  return { imgCanvas, maskCanvas, w, h };
+}
+
+function canvasToBlob(canvas) {
+  return new Promise(r => canvas.toBlob(r, 'image/png'));
+}
+
+// ===== GENERATE =====
+async function generateMockups() {
+  if (isGenerating || !apiKey) return;
+  const name = document.getElementById('bizName').value.trim();
+  const tagline = document.getElementById('bizTagline').value.trim();
+  if (!signBox || !name) return;
+
+  selectedSignType = document.getElementById('signTypeSelect').value;
+  const signType = SIGN_TYPE_MAP[selectedSignType];
+
+  isGenerating = true;
+  mockupResults = [];
+  selectedMockup = null;
+  document.getElementById('exportSelectedBtn').disabled = true;
+  document.getElementById('editBar').classList.remove('active');
+  document.getElementById('resultsBizName').textContent = `${name} — ${signType.name}`;
+
+  const grid = document.getElementById('resultsGrid');
+  grid.innerHTML = '';
+  STYLE_VARIANTS.forEach((style, i) => {
+    const card = document.createElement('div');
+    card.className = 'mockup-card';
+    card.id = `card-${i}`;
+    card.innerHTML = `
+      <div class="card-loading">
+        <div class="card-spinner"></div>
+        <span>${style.name}…</span>
+      </div>
+      <div class="mockup-label">
+        <div>
+          <div class="type-name">${style.name}</div>
+          <div class="type-desc">${style.desc}</div>
+        </div>
+        <span class="sign-type-tag">${signType.tag}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+
+    // Build combined prompt
+    const fullPrompt = signType.base(name, tagline, selectedColor) + '\n\n' + style.modifier;
+    mockupResults.push({ type: signType, style, fullPrompt, dataUrl: null, error: null });
+  });
+
+  goToScreen('results');
+
+  const { imgCanvas, maskCanvas } = prepareImageAndMask();
+  const [imgBlob, maskBlob] = await Promise.all([canvasToBlob(imgCanvas), canvasToBlob(maskCanvas)]);
+
+  // Fire all 3 with slight stagger
+  const promises = STYLE_VARIANTS.map((style, i) =>
+    new Promise(resolve => {
+      setTimeout(() => resolve(generateSingle(imgBlob, maskBlob, mockupResults[i].fullPrompt, i)), i * 400);
+    })
+  );
+  await Promise.all(promises);
+  isGenerating = false;
+}
+
+async function generateSingle(imgBlob, maskBlob, prompt, idx) {
+  const card = document.getElementById(`card-${idx}`);
+  try {
+    const formData = new FormData();
+    formData.append('model', 'gpt-image-1.5');
+    formData.append('image', imgBlob, 'storefront.png');
+    formData.append('mask', maskBlob, 'mask.png');
+    formData.append('prompt', prompt);
+    formData.append('n', '1');
+    formData.append('size', 'auto');
+
+    const resp = await fetch('https://api.openai.com/v1/images/edits', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: formData
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API error ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    let dataUrl;
+    if (data.data[0].b64_json) {
+      dataUrl = 'data:image/png;base64,' + data.data[0].b64_json;
+    } else if (data.data[0].url) {
+      const imgResp = await fetch(data.data[0].url);
+      const blob = await imgResp.blob();
+      dataUrl = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(blob); });
+    }
+
+    mockupResults[idx].dataUrl = dataUrl;
+
+    const loading = card.querySelector('.card-loading');
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = mockupResults[idx].style.name;
+    loading.replaceWith(img);
+    card.onclick = () => selectMockup(idx);
+
+  } catch (err) {
+    console.error(`Failed ${mockupResults[idx].style.id}:`, err);
+    mockupResults[idx].error = err.message;
+
+    const loading = card.querySelector('.card-loading');
+    const errDiv = document.createElement('div');
+    errDiv.className = 'card-error';
+    errDiv.innerHTML = `
+      <span class="err-icon">⚠️</span>
+      <span class="err-msg">${err.message.length > 120 ? err.message.slice(0, 120) + '…' : err.message}</span>
+      <button class="btn btn-secondary" style="font-size:11px; padding:6px 12px; margin-top:6px;" onclick="event.stopPropagation(); retryOne(${idx})">Retry</button>
+    `;
+    loading.replaceWith(errDiv);
+  }
+}
+
+async function retryOne(idx) {
+  const result = mockupResults[idx];
+  const card = document.getElementById(`card-${idx}`);
+
+  const content = card.querySelector('.card-error') || card.querySelector('img');
+  const loadDiv = document.createElement('div');
+  loadDiv.className = 'card-loading';
+  loadDiv.innerHTML = `<div class="card-spinner"></div><span>Retrying ${result.style.name}…</span>`;
+  content.replaceWith(loadDiv);
+
+  const { imgCanvas, maskCanvas } = prepareImageAndMask();
+  const [imgBlob, maskBlob] = await Promise.all([canvasToBlob(imgCanvas), canvasToBlob(maskCanvas)]);
+  await generateSingle(imgBlob, maskBlob, result.fullPrompt, idx);
+}
+
+function selectMockup(idx) {
+  if (!mockupResults[idx].dataUrl) return;
+  selectedMockup = idx;
+  document.querySelectorAll('.mockup-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById(`card-${idx}`).classList.add('selected');
+  document.getElementById('exportSelectedBtn').disabled = false;
+
+  // Show edit bar
+  const editBar = document.getElementById('editBar');
+  editBar.classList.add('active');
+  document.getElementById('editThumb').src = mockupResults[idx].dataUrl;
+  document.getElementById('editTypeBadge').textContent = mockupResults[idx].style.name + ' — ' + mockupResults[idx].type.name;
+  document.getElementById('editPrompt').value = '';
+  document.getElementById('editPrompt').focus();
+}
+
+function useChip(el) {
+  document.getElementById('editPrompt').value = el.textContent;
+  document.getElementById('editPrompt').focus();
+}
+
+async function submitEdit() {
+  if (selectedMockup === null || !apiKey) return;
+  const editText = document.getElementById('editPrompt').value.trim();
+  if (!editText) return;
+
+  const idx = selectedMockup;
+  const card = document.getElementById(`card-${idx}`);
+
+  // Show loading on the selected card
+  const existingImg = card.querySelector('img');
+  if (existingImg) {
+    const loadDiv = document.createElement('div');
+    loadDiv.className = 'card-loading';
+    loadDiv.innerHTML = `<div class="card-spinner"></div><span>Editing…</span>`;
+    existingImg.replaceWith(loadDiv);
+  }
+
+  // Disable edit button while generating
+  document.getElementById('editSubmitBtn').disabled = true;
+
+  try {
+    const { imgCanvas, maskCanvas } = prepareImageAndMask();
+    const [imgBlob, maskBlob] = await Promise.all([canvasToBlob(imgCanvas), canvasToBlob(maskCanvas)]);
+
+    // Build combined prompt: original prompt + user edit instruction
+    const basePrompt = mockupResults[idx].fullPrompt;
+    const editPrompt = basePrompt + `\n\nAdditional instruction from the user: ${editText}`;
+
+    const formData = new FormData();
+    formData.append('model', 'gpt-image-1.5');
+    formData.append('image', imgBlob, 'storefront.png');
+    formData.append('mask', maskBlob, 'mask.png');
+    formData.append('prompt', editPrompt);
+    formData.append('n', '1');
+    formData.append('size', 'auto');
+
+    const resp = await fetch('https://api.openai.com/v1/images/edits', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}` },
+      body: formData
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || `API error ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    let dataUrl;
+    if (data.data[0].b64_json) {
+      dataUrl = 'data:image/png;base64,' + data.data[0].b64_json;
+    } else if (data.data[0].url) {
+      const imgResp = await fetch(data.data[0].url);
+      const blob = await imgResp.blob();
+      dataUrl = await new Promise(r => { const rd = new FileReader(); rd.onload = () => r(rd.result); rd.readAsDataURL(blob); });
+    }
+
+    mockupResults[idx].dataUrl = dataUrl;
+
+    const loading = card.querySelector('.card-loading');
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = mockupResults[idx].style.name;
+    if (loading) loading.replaceWith(img);
+
+    // Update edit bar thumb
+    document.getElementById('editThumb').src = dataUrl;
+    document.getElementById('editPrompt').value = '';
+
+  } catch (err) {
+    console.error('Edit failed:', err);
+    const loading = card.querySelector('.card-loading');
+    if (loading) {
+      const errDiv = document.createElement('div');
+      errDiv.className = 'card-error';
+      errDiv.innerHTML = `
+        <span class="err-icon">⚠️</span>
+        <span class="err-msg">${err.message.length > 120 ? err.message.slice(0, 120) + '…' : err.message}</span>
+        <button class="btn btn-secondary" style="font-size:11px; padding:6px 12px; margin-top:6px;" onclick="event.stopPropagation(); retryOne(${idx})">Retry</button>
+      `;
+      loading.replaceWith(errDiv);
+    }
+  }
+
+  document.getElementById('editSubmitBtn').disabled = false;
+}
+
+// Allow Enter key to submit edit
+document.getElementById('editPrompt').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') submitEdit();
+});
+
+function exportSelected() {
+  if (selectedMockup === null) return;
+  const { type, style, dataUrl } = mockupResults[selectedMockup];
+  if (!dataUrl) return;
+  document.getElementById('exportImg').src = dataUrl;
+  document.getElementById('exportTypeName').textContent = style.name + ' — ' + type.name;
+  document.getElementById('exportTypeDesc').textContent = style.desc;
+  document.getElementById('exportTag').textContent = type.tag;
+  goToScreen('export');
+}
+
+// ===== EXPORT =====
+function downloadPNG() {
+  if (selectedMockup === null) return;
+  const { type, style, dataUrl } = mockupResults[selectedMockup];
+  const link = document.createElement('a');
+  link.download = `signcraft-${type.tag.toLowerCase().replace(/ /g,'-')}-${style.id}-mockup.png`;
+  link.href = dataUrl;
+  link.click();
+}
+
+async function copyToClipboard() {
+  if (selectedMockup === null) return;
+  try {
+    const { dataUrl } = mockupResults[selectedMockup];
+    const resp = await fetch(dataUrl);
+    const blob = await resp.blob();
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    alert('Copied to clipboard!');
+  } catch (e) {
+    alert('Copy failed — try downloading instead.');
+  }
+}
+
+// ===== INIT =====
+window.addEventListener('resize', () => {
+  if (uploadedImage && document.getElementById('screen-draw').classList.contains('active')) setupDrawCanvas();
+});
+initApiKey();
+updateGenerateBtn();
+</script>
+</body>
+</html>
